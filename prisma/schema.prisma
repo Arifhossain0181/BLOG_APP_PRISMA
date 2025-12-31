@@ -5,7 +5,7 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../generated/prisma"
 }
 
@@ -22,7 +22,7 @@ model Post {
   status     PostStatus @default(PUBLISHED)
   tags       String[]
   view       Int        @default(0)
-  authorId   String   //better auth 
+  authorId   String //better auth 
   comments   Comments[]
   updatedAt  DateTime   @updatedAt
   createdAt  DateTime   @default(now())
@@ -40,13 +40,12 @@ enum PostStatus {
 model Comments {
   id        String        @id @default(uuid())
   content   String        @db.VarChar(500)
-  authorId  String      //better auth
+  authorId  String //better auth
   postId    String
   post      Post          @relation(fields: [postId], references: [id])
-  ParentsId String? 
+  ParentsId String?
   Parent    Comments?     @relation("CommentReplies", fields: [ParentsId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   replies   Comments[]    @relation("CommentReplies")
-  
   status    CommentStatus @default(APPROVED)
   updatedAt DateTime      @updatedAt
   createdAt DateTime      @default(now())
@@ -60,4 +59,71 @@ enum CommentStatus {
   DRAFT
   APPROVED
   REJECTED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  role   String? @default("user")
+  phone  String?
+  status String? @default("active")
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
 }
