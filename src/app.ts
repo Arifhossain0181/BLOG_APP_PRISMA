@@ -2,11 +2,16 @@ import express from 'express';
 import { Postrouter } from './modules/Post.router';
 import { auth } from './lib/auth';
 import { toNodeHandler } from "better-auth/node";
-import dotenv from 'dotenv';
-
+import cors from 'cors';
 const app = express();
 
 app.use(express.json());
+app.use(cors({
+    origin: process.env.APP_URL || "http://localhost:4000",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+}))
 
 // Debug logging
 app.use('/api/auth', (req, res, next) => {
