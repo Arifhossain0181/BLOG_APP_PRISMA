@@ -5,6 +5,7 @@ import { authMiddleware, UserRole } from "../Middleware/auth";
 const router = Router();
 
 router.get("/",PostController.getALLPosts);
+router.get("/:id",PostController.getPostById);
 
 
 

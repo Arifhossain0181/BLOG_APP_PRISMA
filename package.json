@@ -7,9 +7,10 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
     "start": "tsx src/server.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "tsx watch src/server.ts",
+    "seedadmin": "tsx watch src/scriPts/seedAdmin.ts"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

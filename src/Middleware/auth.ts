@@ -1,8 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { auth as betterAuth } from "../lib/auth";
 
-
-
 export enum UserRole {
   ADMIN = "ADMIN",
   USER = "USER",
@@ -51,7 +49,12 @@ export const authMiddleware = (...roles: UserRole[]) => {
       }
 
       if (roles.length && !roles.includes(role)) {
-        console.log("ERROR: Role mismatch - User has:", role, "Needs one of:", roles);
+        console.log(
+          "ERROR: Role mismatch - User has:",
+          role,
+          "Needs one of:",
+          roles
+        );
         return res.status(403).json({ error: "Forbidden" });
       }
 

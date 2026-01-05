@@ -1,4 +1,5 @@
 import { Post, PostStatus } from "../../generated/prisma/client";
+import { SortOrder } from "../../generated/prisma/internal/prismaNamespace";
 import { PostWhereInput } from "../../generated/prisma/models";
 import { prisma } from "../lib/prisma";
 
@@ -20,6 +21,11 @@ const getAllPosts = async (payload: {
   tags?: string[] | [],
     isFeatured?:boolean | undefined,
     status?:PostStatus | undefined,
+    page?: number,
+    pageSize?: number,
+    skip?: number,
+    sortBy?: string | undefined,
+    sortOrder:string | undefined,
 }) => {
   try {
     console.log("get all Post", payload);
@@ -67,16 +73,77 @@ const getAllPosts = async (payload: {
     }
 
 
-    const result = await prisma.post.findMany({
+    // Calculate pagination
+    const page = payload.page || 1;
+    const pageSize = payload.pageSize || 10;
+    const skip = (page - 1) * pageSize;
+
+    // Get total count for pagination metadata
+    const totalCount = await prisma.post.count({
       where: andConditions.length > 0 ? { AND: andConditions } : {},
     });
-    return result;
+
+    const result = await prisma.post.findMany({
+      take : pageSize,
+      skip : skip,
+      where: andConditions.length > 0 ? { AND: andConditions } : {},
+      orderBy: payload.sortBy && payload.sortOrder ? {
+        [payload.sortBy]: payload.sortOrder as SortOrder
+      } : {
+        createdAt: 'desc'
+      }
+      
+    });
+    const total = await prisma.post.count({
+      where:{
+        AND: andConditions
+      }
+    })
+
+
+    return {
+      data: result,
+      pagination: {
+        page,
+        pageSize,
+        totalCount: total,
+        totalPages: Math.ceil(total / pageSize),
+        
+      },
+    };
   } catch (error) {
     throw error;
   }
 };
 
+
+///get Post by ID
+
+const getPostById = async (id:string) => {
+  const result = await prisma.$transaction(async(tx)=>{
+    const updatedPost = await tx.post.update({
+    where:{
+      id: id
+    },
+    data:{
+      view: {
+        increment: 1
+      }
+    }
+  });
+  const result = await tx.post.findUnique({
+    where:{
+      id: id
+    }
+  });
+  return result;
+  })
+  return result;
+}
+
+
 export const PostService = {
   createPost,
   getAllPosts,
+  getPostById
 };
