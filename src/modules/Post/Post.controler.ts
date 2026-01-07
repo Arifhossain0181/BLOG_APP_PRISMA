@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { PostService } from "./Post.serverice";
-import { Post, PostStatus } from "../../generated/prisma/client";
-import Paginationandsorting from "../HelPers/Paginationandsorting";
+import { Post, PostStatus } from "../../../generated/prisma/client";
+import Paginationandsorting from "../../HelPers/Paginationandsorting";
 
 
 const createPost = async (req: Request, res: Response) => {
