@@ -1,4 +1,8 @@
-import { CommentStatus, Post, PostStatus } from "../../../generated/prisma/client";
+import {
+  CommentStatus,
+  Post,
+  PostStatus,
+} from "../../../generated/prisma/client";
 import { SortOrder } from "../../../generated/prisma/internal/prismaNamespace";
 import { PostWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
@@ -93,7 +97,6 @@ const getAllPosts = async (payload: {
           : {
               createdAt: "desc",
             },
-            
     });
     const total = await prisma.post.count({
       where: {
@@ -133,35 +136,80 @@ const getPostById = async (id: string) => {
       where: {
         id: id,
       },
-      include:{
-       comments:{
-        where:{
-          ParentsId:null,
-          status:CommentStatus.APPROVED
+      include: {
+        comments: {
+          where: {
+            ParentsId: null,
+            status: CommentStatus.APPROVED,
+          },
+          orderBy: { createdAt: "desc" },
+          include: {
+            replies: {
+              where: {
+                status: CommentStatus.APPROVED,
+              },
+              orderBy: { createdAt: "asc" },
+              include: {
+                replies: true,
+              },
+            },
+          },
         },
-        orderBy:{createdAt:"desc"},
-        include:{
-          replies:{
-            where:{
-              status:CommentStatus.APPROVED,
-            },
-            orderBy:{createdAt:"asc"},
-            include:{
-              replies:true
-            },
-             
-            
-          }
-        }
-        
-       },
-       _count:{
-        select:{comments:true}
-       }
-      }
+        _count: {
+          select: { comments: true },
+        },
+      },
     });
     return result;
   });
+  return result;
+};
+
+const getMyPosts = async (authorId: string) => {
+  const result = await prisma.post.findMany({
+    where: {
+      authorId: authorId,
+    },
+    orderBy: { createdAt: "desc" },
+    include: {
+      _count: {
+        select: { comments: true },
+      },
+    },
+  });
+  const total = await prisma.post.count({
+    where: {
+      authorId: authorId,
+    },
+  });
+  return { data: result, totalCount: total };
+};
+const updatePost = async (
+  postId: string,
+  data: Partial<Post>,
+  authorId: string,
+  isAdmin: boolean
+) => {
+  const Postdata = await prisma.post.findUniqueOrThrow({
+    where: {
+      id: postId,
+    },
+    select: { id: true, authorId: true },
+  });
+  
+  if((Postdata.authorId !== authorId ) && !isAdmin){
+    throw new Error("Unauthorized: You can only update your own posts");
+  }
+  
+  // Filter out fields that shouldn't be updated
+  const { id, authorId: _, createdAt, updatedAt, view, ...updateData } = data;
+  
+  const result = await prisma.post.update({
+    where:{
+      id: postId
+    },
+    data: updateData
+  })
   return result;
 };
 
@@ -169,4 +217,6 @@ export const PostService = {
   createPost,
   getAllPosts,
   getPostById,
+  getMyPosts,
+  updatePost,
 };

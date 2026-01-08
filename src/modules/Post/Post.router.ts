@@ -5,11 +5,10 @@ import { authMiddleware, UserRole } from "../../Middleware/auth";
 const router = Router();
 
 router.get("/",PostController.getALLPosts);
+router.get("/my-posts",authMiddleware(UserRole.USER ,UserRole.ADMIN),PostController.getMyPosts);
 router.get("/:id",PostController.getPostById);
 
-
-
-
-router.post("/", authMiddleware(UserRole.USER), PostController.createPost);
+router.post("/", authMiddleware(UserRole.USER ,UserRole.ADMIN), PostController.createPost);
+router.patch("/:postId",authMiddleware(UserRole.USER ,UserRole.ADMIN),PostController.updatePost);
 
 export const Postrouter = router;

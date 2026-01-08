@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { PostService } from "./Post.serverice";
 import { Post, PostStatus } from "../../../generated/prisma/client";
 import Paginationandsorting from "../../HelPers/Paginationandsorting";
+import { UserRole } from "../../Middleware/auth";
 
 
 const createPost = async (req: Request, res: Response) => {
@@ -77,9 +78,47 @@ const getPostById = async (req: Request, res: Response) => {
         res.status(500).json({ error: "Failed to fetch post" });
     }
 }
+const getMyPosts = async (req: Request, res: Response) => {
+  try{
+    const user = req.user;
+    console.log("user data",user)
+    if(!user){
+      throw new Error("Unauthorized");
+    }
+    const result = await PostService.getMyPosts(user?.id as string);
+    res.status(200).json(result);
+  }
+  catch(error){
+    res.status(500).json({ error: "Failed to fetch post", details: error });
+  }
+}
+const updatePost = async (req: Request, res: Response) => {
+  try{
+    const user = req.user;
+    if(!user){
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    const {postId} = req.params;
+    const isAdmin= user.role === UserRole.ADMIN
+  
+    const result = await PostService.updatePost(postId as string, req.body, user.id as string , isAdmin);
+    res.status(200).json(result);
+  }
+  catch(error: any){
+    console.error("Update Post Error:", error);
+    const statusCode = error.message?.includes("Unauthorized") ? 403 : 500;
+    res.status(statusCode).json({ 
+      error: "Failed to update post", 
+      message: error.message || "Unknown error",
+      details: error 
+    }); 
+  }
+}
 
 export const PostController = {
   createPost,
   getALLPosts,
-  getPostById
+  getPostById,
+  getMyPosts,
+  updatePost
 };

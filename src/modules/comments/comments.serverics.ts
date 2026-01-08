@@ -1,5 +1,5 @@
 import { error } from "node:console";
-import { Prisma } from "../../../generated/prisma/client";
+import { CommentStatus, Prisma } from "../../../generated/prisma/client";
 import { prisma } from "../../lib/prisma";
 
 
@@ -85,9 +85,67 @@ const deletecommets = async(commentId:string ,authorId:string)=>{
         }
     })
 }
+// authorID ,commentID ,UPDate data
+const UPdatecomments = async(commentID:string, authorID:string, data:{content?:string ,status?:CommentStatus})=>{
+    const commentData = await prisma.comments.findFirst({
+        where:{
+            id:commentID,
+            authorId:authorID
+        }
+        ,select:{
+            id:true
+        }
+    })
+    if(!commentData){
+        throw new Error("invalid data provided")
+    }
+    return await prisma.comments.update({
+        where:{
+            id:commentData.id as string,
+            authorId:authorID
+        },
+        
+            data:data
+        
+    })
+
+
+}
+const moderateComments = async( id: string,  data:{status:CommentStatus})=>{
+
+    const commentData = await prisma.comments.findUniqueOrThrow({
+        where:{
+            id
+        },
+        select:{
+            id:true,
+            status:true
+        }
+
+    })
+
+    if(commentData.status === data.status){
+      throw new Error("Comment is already in the desired status")
+
+    }
+
+
+    return await prisma.comments.update({
+        where:{
+            id:commentData.id
+        },
+        data:{
+            status:data.status
+        }
+    })
+
+
+}
 export const commnetsService = {
     createComments,
     getCommentByID,
     getCommentByAuthor,
-    deletecommets
+    deletecommets,
+    UPdatecomments,
+    moderateComments
 }
