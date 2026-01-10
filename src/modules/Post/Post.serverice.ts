@@ -196,21 +196,124 @@ const updatePost = async (
     },
     select: { id: true, authorId: true },
   });
-  
-  if((Postdata.authorId !== authorId ) && !isAdmin){
+
+  if (Postdata.authorId !== authorId && !isAdmin) {
     throw new Error("Unauthorized: You can only update your own posts");
   }
-  
+
   // Filter out fields that shouldn't be updated
   const { id, authorId: _, createdAt, updatedAt, view, ...updateData } = data;
-  
+
   const result = await prisma.post.update({
-    where:{
-      id: postId
+    where: {
+      id: postId,
     },
-    data: updateData
-  })
+    data: updateData,
+  });
   return result;
+};
+//delete
+// user role= nijer post delete korte parbe
+// admin role = sobar post delete korte parbe
+const deletePost = async (
+  postId: string,
+  authorId: string,
+  isAdmin: boolean
+) => {
+  const Postdata = await prisma.post.findUniqueOrThrow({
+    where: {
+      id: postId,
+    },
+    select: {
+      id: true,
+      authorId: true,
+    },
+  });
+  // create korea nijer post delete korte parbe kinha
+  if (Postdata.authorId !== authorId && !isAdmin) {
+    throw new Error("Unauthorized: You can only delete your own posts");
+  }
+  return await prisma.post.delete({
+    where: {
+      id: postId,
+    },
+  });
+};
+// statistics
+const getstats = async () => {
+  // PostCount ,PublishedPostCount ,DraftPostCount ,TotalViews
+
+  return await prisma.$transaction(async (tx) => {
+    const [
+      totalCount,
+      PublishedPostCount,
+      DraftPostCount,
+      archivedPostCount,
+      totalComments,
+      approvedComments,
+      rejectedComments,
+      totaluser,
+      admincount,
+      usercount,
+      totalViews,
+    ] = await Promise.all([
+      await tx.post.count(),
+      await tx.post.count({
+        where: {
+          status: PostStatus.PUBLISHED,
+        },
+      }),
+      await tx.post.count({
+        where: {
+          status: PostStatus.DRAFT,
+        },
+      }),
+      await tx.post.count({
+        where: {
+          status: PostStatus.ARCHIVED,
+        },
+      }),
+      await tx.comments.count(),
+      await tx.comments.count({
+        where: {
+          status: CommentStatus.APPROVED,
+        },
+      }),
+      await tx.comments.count({
+        where: {
+          status: CommentStatus.REJECTED,
+        },
+      }),
+      await tx.user.count(),
+      await tx.user.count({
+        where: {
+          role: "ADMIN",
+        },
+      }),
+      await tx.user.count({
+        where: {
+          role: "USER",
+        },
+      }),
+      await tx.post.aggregate({
+        _sum: { view: true },
+      }),
+    ]);
+
+    return {
+      totalCount,
+      PublishedPostCount,
+      DraftPostCount,
+      archivedPostCount,
+      totalComments,
+      approvedComments,
+      rejectedComments,
+      totaluser,
+      admincount,
+      usercount,
+      totalViews: totalViews._sum.view,
+    };
+  });
 };
 
 export const PostService = {
@@ -219,4 +322,6 @@ export const PostService = {
   getPostById,
   getMyPosts,
   updatePost,
+  deletePost,
+  getstats,
 };

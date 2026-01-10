@@ -1,0 +1,25 @@
+
+
+
+model Post {
+  id         String     @id @default(uuid())
+  title      String     @db.VarChar(255)
+  content    String?
+  thumbnail  String?    @db.VarChar(255)
+  isFeatured Boolean    @default(false)
+  status     PostStatus @default(PUBLISHED)
+  tags       String[]
+  view       Int        @default(0)
+  authorId   String //better auth 
+  comments   Comments[]   @relation("PostComments")
+  updatedAt  DateTime   @updatedAt
+  createdAt  DateTime   @default(now())
+
+  @@index([authorId])
+  @@map("posts")
+}
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}

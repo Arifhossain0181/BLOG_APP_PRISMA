@@ -114,11 +114,39 @@ const updatePost = async (req: Request, res: Response) => {
     }); 
   }
 }
+const deletePost = async (req: Request, res: Response) => {
+  try{
+    const user = req.user;
+    if(!user ){
+      throw new Error("Unauthorized");
+    }
+    const {postId} = req.params;
+    const isAdmin= user.role === UserRole.ADMIN
+    const result = await PostService.deletePost(postId as string, user.id as string , isAdmin);
+    res.status(200).json({message: "Post deleted successfully", post: result});
+
+  }
+  catch(error){
+    res.status(500).json({ error: "Failed to delete post", details: error });
+  }
+
+}
+const getstats = async (req: Request, res: Response) => {
+  try{
+    const result = await PostService.getstats();
+    res.status(200).json(result);
+  }
+  catch(error){
+    res.status(500).json({ error: "Failed to fetch statistics", details: error });
+  }
+}
 
 export const PostController = {
   createPost,
   getALLPosts,
   getPostById,
   getMyPosts,
-  updatePost
+  updatePost,
+  deletePost,
+  getstats
 };
