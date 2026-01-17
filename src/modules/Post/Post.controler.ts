@@ -1,11 +1,11 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { PostService } from "./Post.serverice";
 import { Post, PostStatus } from "../../../generated/prisma/client";
 import Paginationandsorting from "../../HelPers/Paginationandsorting";
 import { UserRole } from "../../Middleware/auth";
 
 
-const createPost = async (req: Request, res: Response) => {
+const createPost = async (req: Request, res: Response ,next: NextFunction) => {
   try {
     const user = req.user;
     if (!user) {
@@ -14,7 +14,7 @@ const createPost = async (req: Request, res: Response) => {
     const rsult = await PostService.createPost(req.body, user.id as string);
     res.status(201).json(rsult);
   } catch (error) {
-    res.status(500).json({ error: "Failed to create post" });
+    next(error);
   }
 };
 

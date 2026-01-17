@@ -4,6 +4,8 @@ import { auth } from './lib/auth';
 import { toNodeHandler } from "better-auth/node";
 import cors from 'cors';
 import { commetentrouter } from './modules/comments/comments.router';
+
+import errorhandler from './Middleware/golbarErrorhandeler';
 const app = express();
 
 app.use(express.json());
@@ -28,9 +30,7 @@ app.use('/Posts', Postrouter);
 app.use('/comments', commetentrouter);
 
 // Error handler
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-    console.error('Error:', err);
-    res.status(500).json({ error: err.message || 'Internal Server Error' });
-});
+
+app.use(errorhandler)
 
 export default app;

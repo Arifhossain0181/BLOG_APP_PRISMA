@@ -1,10 +1,9 @@
-
 model Comments {
   id        String        @id @default(uuid())
   content   String        @db.VarChar(500)
   authorId  String //better auth
   postId    String
-  post      Post          @relation(fields: [postId], references: [id] ,onDelete: Cascade)
+  post      Post          @relation("PostComments", fields: [postId], references: [id], onDelete: Cascade)
   ParentsId String?
   Parent    Comments?     @relation("CommentReplies", fields: [ParentsId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   replies   Comments[]    @relation("CommentReplies")
