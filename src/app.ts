@@ -6,6 +6,7 @@ import cors from 'cors';
 import { commetentrouter } from './modules/comments/comments.router';
 
 import errorhandler from './Middleware/golbarErrorhandeler';
+import { notfound } from './Middleware/notfound';
 const app = express();
 
 app.use(express.json());
@@ -30,6 +31,7 @@ app.use('/Posts', Postrouter);
 app.use('/comments', commetentrouter);
 
 // Error handler
+app.use(notfound)
 
 app.use(errorhandler)
 

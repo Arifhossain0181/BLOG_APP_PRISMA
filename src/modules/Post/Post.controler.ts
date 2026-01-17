@@ -92,7 +92,7 @@ const getMyPosts = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Failed to fetch post", details: error });
   }
 }
-const updatePost = async (req: Request, res: Response) => {
+const updatePost = async (req: Request, res: Response , next: NextFunction) => {
   try{
     const user = req.user;
     if(!user){
@@ -103,8 +103,7 @@ const updatePost = async (req: Request, res: Response) => {
   
     const result = await PostService.updatePost(postId as string, req.body, user.id as string , isAdmin);
     res.status(200).json(result);
-  }
-  catch(error: any){
+  } catch(error: any){
     console.error("Update Post Error:", error);
     const statusCode = error.message?.includes("Unauthorized") ? 403 : 500;
     res.status(statusCode).json({ 
@@ -113,8 +112,8 @@ const updatePost = async (req: Request, res: Response) => {
       details: error 
     }); 
   }
-}
-const deletePost = async (req: Request, res: Response) => {
+};
+const deletePost = async (req: Request, res: Response, next: NextFunction) => {
   try{
     const user = req.user;
     if(!user ){
@@ -127,7 +126,7 @@ const deletePost = async (req: Request, res: Response) => {
 
   }
   catch(error){
-    res.status(500).json({ error: "Failed to delete post", details: error });
+    next(error);
   }
 
 }
