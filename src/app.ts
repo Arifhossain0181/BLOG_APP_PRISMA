@@ -29,7 +29,9 @@ app.use('/api/auth', toNodeHandler(auth));
 
 app.use('/Posts', Postrouter);
 app.use('/comments', commetentrouter);
-
+app.get('/', (req, res) => {
+    res.send('Welcome to the Blog API');
+});
 // Error handler
 app.use(notfound)
 
