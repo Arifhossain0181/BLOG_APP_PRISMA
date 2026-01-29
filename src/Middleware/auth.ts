@@ -71,7 +71,11 @@ export const authMiddleware = (...roles: UserRole[]) => {
       next();
     } catch (error) {
       console.error("Authentication error:", error);
-      return res.status(500).json({ error: "Internal Server Error" });
+      return res.status(401).json({ 
+        success: false,
+        error: "Authentication failed",
+        message: error instanceof Error ? error.message : "Unknown authentication error"
+      });
     }
   };
 };

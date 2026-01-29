@@ -9,11 +9,14 @@ const createPost = async (req: Request, res: Response ,next: NextFunction) => {
   try {
     const user = req.user;
     if (!user) {
-      return res.status(401).json({ error: "Unauthorized" });
+      return res.status(401).json({ success: false, error: "Unauthorized" });
     }
+    console.log('Creating post with data:', req.body);
+    console.log('User:', user);
     const rsult = await PostService.createPost(req.body, user.id as string);
-    res.status(201).json(rsult);
+    res.status(201).json({ success: true, data: rsult });
   } catch (error) {
+    console.error('Error in createPost controller:', error);
     next(error);
   }
 };

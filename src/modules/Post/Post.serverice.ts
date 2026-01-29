@@ -2,22 +2,30 @@ import {
   CommentStatus,
   Post,
   PostStatus,
+  Prisma,
 } from "../../../generated/prisma/client";
-import { SortOrder } from "../../../generated/prisma/internal/prismaNamespace";
-import { PostWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
 
 const createPost = async (
   data: Omit<Post, "id" | "createdAt" | "updatedAt">,
   userId: string
 ) => {
-  const result = await prisma.post.create({
-    data: {
-      ...data,
-      authorId: userId,
-    },
-  });
-  return result;
+  try {
+    console.log('Post Service - Creating post with data:', data);
+    console.log('Post Service - Author ID:', userId);
+    
+    const result = await prisma.post.create({
+      data: {
+        ...data,
+        authorId: userId,
+      },
+    });
+    console.log('Post Service - Post created successfully:', result.id);
+    return result;
+  } catch (error) {
+    console.error('Post Service - Error creating post:', error);
+    throw error;
+  }
 };
 
 const getAllPosts = async (payload: {
@@ -33,7 +41,7 @@ const getAllPosts = async (payload: {
 }) => {
   try {
     console.log("get all Post", payload);
-    const andConditions: PostWhereInput[] = [];
+    const andConditions: Prisma.PostWhereInput[] = [];
     if (payload.search) {
       andConditions.push({
         OR: [
@@ -92,7 +100,7 @@ const getAllPosts = async (payload: {
       orderBy:
         payload.sortBy && payload.sortOrder
           ? {
-              [payload.sortBy]: payload.sortOrder as SortOrder,
+              [payload.sortBy]: payload.sortOrder as Prisma.SortOrder,
             }
           : {
               createdAt: "desc",

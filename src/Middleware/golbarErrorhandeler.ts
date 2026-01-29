@@ -7,9 +7,10 @@ function errorhandler(
     res: Response,
     next: NextFunction
 ) {
+    console.error('Error Handler Called:', err);
     let statusCode = 500;
     let errormessage = 'Internal Server Error';
-    let errorDetails = err;
+    let errorDetails: any = null;
 
     // Customize error response based on error type
      if(err instanceof Prisma.PrismaClientValidationError){
@@ -55,13 +56,19 @@ function errorhandler(
         statusCode = 503;
         errormessage = 'Database connection error';
         }
+        else if(err.message){
+        errormessage = err.message;
+        errorDetails = err.stack;
+        }
 
 
 
 
       res.status(statusCode).json({
+        success: false,
+        message: errormessage,
         error: errormessage,
-        details: errorDetails,
+        ...(process.env.NODE_ENV === 'development' && errorDetails && { details: errorDetails }),
      });
     }
 
